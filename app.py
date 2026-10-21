@@ -3,7 +3,6 @@ import streamlit as st
 from bokeh.models.widgets import Button
 from bokeh.models import CustomJS
 from streamlit_bokeh_events import streamlit_bokeh_events
-from PIL import Image
 import time
 import paho.mqtt.client as paho
 import json
@@ -12,46 +11,41 @@ import json
 # CONFIGURACIÓN DE PÁGINA
 # ═══════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="Voice Control · MQTT",
+    page_title="MQTT Voice Control",
     page_icon="🎙️",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
 # ═══════════════════════════════════════════════════════════════
-# ESTILOS — SMART HOME / GLASSMORPHISM
+# ESTILOS — CYBERPUNK TERMINAL
 # ═══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
     :root {
-        --bg:         #09090B;
-        --glass:      rgba(24, 24, 27, 0.6);
-        --border:     rgba(255, 255, 255, 0.1);
-        --text:       #FAFAFA;
-        --muted:      #A1A1AA;
-        --accent:     #8B5CF6; /* Violeta */
-        --success:    #10B981;
+        --bg:         #050505;
+        --surface:    #111111;
+        --border:     #333333;
+        --text:       #EDEDED;
+        --muted:      #888888;
+        --neon:       #00FF41; /* Verde Matrix */
+        --neon-glow:  rgba(0, 255, 65, 0.3);
     }
 
     html, body, [class*="css"], .stApp, button, input, textarea {
-        font-family: 'Inter', sans-serif !important;
+        font-family: 'Space Grotesk', sans-serif !important;
         color: var(--text) !important;
-    }
-
-    h1, h2, h3 {
-        font-family: 'Outfit', sans-serif !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.02em !important;
     }
 
     /* ═══ FONDO ═══ */
     .stApp {
         background-color: var(--bg) !important;
         background-image: 
-            radial-gradient(circle at 50% -10%, rgba(139, 92, 246, 0.2) 0%, transparent 60%),
-            radial-gradient(circle at 50% 110%, rgba(16, 185, 129, 0.1) 0%, transparent 60%);
+            linear-gradient(rgba(0, 255, 65, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 65, 0.03) 1px, transparent 1px);
+        background-size: 30px 30px;
         background-attachment: fixed;
     }
 
@@ -61,140 +55,122 @@ st.markdown("""
 
     .block-container {
         padding-top: 3rem !important;
-        padding-bottom: 3rem !important;
-        max-width: 700px !important;
+        padding-bottom: 2rem !important;
+        max-width: 650px !important;
     }
 
-    /* ═══ TÍTULOS ═══ */
+    /* ═══ HEADER ═══ */
     .hero {
         text-align: center;
-        margin-bottom: 2.5rem;
-    }
-    .hero-kicker {
-        font-size: 0.8rem;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--accent);
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        display: block;
+        margin-bottom: 2rem;
     }
     .hero h1 {
-        font-size: 3rem !important;
-        margin: 0 0 0.5rem 0 !important;
+        font-size: 2.5rem !important;
+        font-weight: 700 !important;
+        color: #fff !important;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem !important;
+        text-shadow: 0 0 10px rgba(255,255,255,0.2);
     }
     .hero p {
-        font-size: 1.05rem;
-        color: var(--muted);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9rem;
+        color: var(--neon);
         margin: 0;
     }
 
-    /* ═══ TARJETA PRINCIPAL (Glassmorphism) ═══ */
-    .control-card {
-        background: var(--glass);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+    /* ═══ TARJETA DE INSTRUCCIONES ═══ */
+    .instructions {
+        background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 3rem 2rem 2rem 2rem;
+        border-left: 3px solid var(--neon);
+        border-radius: 6px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        color: var(--muted);
+        line-height: 1.6;
+    }
+    .instructions b {
+        color: var(--text);
+    }
+
+    /* ═══ CONTENEDOR DEL BOTÓN (Oculta el fondo blanco de Bokeh) ═══ */
+    .button-wrapper {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 2.5rem 1.5rem;
         text-align: center;
-        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);
+        box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0, 255, 65, 0.05);
+        margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
     }
-    
-    /* Aura de fondo dentro de la tarjeta */
-    .control-card::before {
+    /* Línea superior decorativa */
+    .button-wrapper::before {
         content: '';
         position: absolute;
-        top: -50px; left: 50%;
-        transform: translateX(-50%);
-        width: 200px; height: 200px;
-        background: var(--accent);
-        filter: blur(80px);
-        opacity: 0.3;
-        z-index: 0;
-        border-radius: 50%;
-    }
-    .control-card > * {
-        position: relative;
-        z-index: 1;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--neon), transparent);
     }
 
-    /* ═══ IMAGEN CIRCULAR PERFECTA ═══ */
-    /* Forzamos la imagen a ser un círculo perfecto, sin importar si es rectangular */
-    [data-testid="stImage"] {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 1.5rem;
-    }
-    [data-testid="stImage"] img {
-        width: 160px !important;
-        height: 160px !important;
-        object-fit: cover !important;
-        border-radius: 50% !important;
-        clip-path: circle(50% at 50% 50%);
-        border: 4px solid var(--accent);
-        box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
-        transition: all 0.3s ease;
-    }
-    [data-testid="stImage"] img:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 50px rgba(139, 92, 246, 0.7);
-    }
-
-    /* ═══ INSTRUCCIÓN ═══ */
-    .instruction {
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: var(--text);
-        margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    /* ═══ EL IFRAME DE BOKEH ═══ */
-    /* Hacemos que el iframe sea transparente y se fusione con la tarjeta */
+    /* Estilo para el iframe de Bokeh */
     iframe[title="bokeh"] {
         background-color: transparent !important;
         border: none !important;
-        border-radius: 12px;
-        display: block;
+        width: 100% !important;
+        height: 80px !important;
+        overflow: hidden !important;
         margin: 0 auto;
+        display: block;
     }
 
-    /* ═══ RESULTADO ═══ */
-    .result-card {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        border-radius: 16px;
+    /* ═══ TERMINAL DE RESULTADOS ═══ */
+    .terminal-box {
+        background: #000000;
+        border: 1px solid #333;
+        border-radius: 8px;
         padding: 1.5rem;
-        margin-top: 1.5rem;
-        text-align: left;
-        animation: fadeIn 0.4s ease-out;
+        font-family: 'JetBrains Mono', monospace;
+        margin-bottom: 2rem;
+        position: relative;
     }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .result-header {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--success);
-        font-weight: 700;
-        margin-bottom: 0.5rem;
+    .terminal-header {
         display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        gap: 6px;
+        margin-bottom: 1rem;
     }
-    .result-text {
-        font-size: 1.3rem;
-        font-weight: 600;
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.r { background: #FF5F56; }
+    .dot.y { background: #FFBD2E; }
+    .dot.g { background: #27C93F; }
+    
+    .terminal-output {
+        font-size: 1.2rem;
+        color: var(--neon);
+        word-wrap: break-word;
+    }
+    .terminal-prompt {
         color: #fff;
-        font-style: italic;
+        margin-right: 8px;
+    }
+
+    /* ═══ FOOTER (METADATOS) ═══ */
+    .footer-metadata {
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--muted);
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+        margin-top: 2rem;
+        letter-spacing: 0.05em;
+    }
+    .footer-metadata b {
+        color: #fff;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -222,36 +198,32 @@ client1.on_message = on_message
 # INTERFAZ GRÁFICA
 # ═══════════════════════════════════════════════════════════════
 
+# 1. Header
 st.markdown("""
     <div class="hero">
-        <span class="hero-kicker">Interfaces Multimodales</span>
-        <h1>Control por Voz</h1>
-        <p>Habla y deja que la magia suceda</p>
+        <h1>Voice Control</h1>
+        <p>SISTEMA DE RECONOCIMIENTO MULTIMODAL</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Abrimos la tarjeta de control
-st.markdown('<div class="control-card">', unsafe_allow_html=True)
-
-# Imagen del micrófono (con fallback si no existe)
-try:
-    image = Image.open('voice_ctrl.jpg')
-    st.image(image)
-except Exception:
-    st.markdown('<div style="font-size: 6rem; margin-bottom: 1rem; text-align: center;">🎙️</div>', unsafe_allow_html=True)
-
+# 2. Instrucciones (Funcionalidad)
 st.markdown("""
-    <div class="instruction">
-        <span>👇</span> Toca el botón y comienza a hablar
+    <div class="instructions">
+        <b>¿Cómo funciona?</b><br>
+        Presiona el botón inferior, permite el acceso al micrófono y habla claramente.
+        El sistema transcribirá tu voz y enviará el texto mediante el protocolo MQTT al tópico <code>voice_ctrl</code>.
     </div>
 """, unsafe_allow_html=True)
 
-# Botón de Bokeh (Usamos button_type="success" para que sea verde sólido nativo)
+# 3. Contenedor del Botón
+st.markdown('<div class="button-wrapper">', unsafe_allow_html=True)
+
+# Creamos el botón de Bokeh con estilo nativo verde y texto oscuro
 stt_button = Button(
-    label="🎤 Iniciar Escucha", 
-    width=200, 
-    height=50, 
-    button_type="success", # Esto hace que el botón sea verde sólido
+    label="🎤 PRESIONAR PARA HABLAR", 
+    width=350, 
+    height=60, 
+    button_type="success", # Botón verde sólido
     margin=(10, 10, 10, 10)
 )
 
@@ -274,7 +246,7 @@ stt_button.js_on_event("button_click", CustomJS(code="""
     recognition.start();
     """))
 
-# Componente de eventos de Bokeh
+# Renderizar el componente
 result = streamlit_bokeh_events(
     stt_button,
     events="GET_TEXT",
@@ -283,35 +255,47 @@ result = streamlit_bokeh_events(
     debounce_time=0
 )
 
-st.markdown('</div>', unsafe_allow_html=True) # Cerramos la tarjeta de control
+st.markdown('</div>', unsafe_allow_html=True) # Cierre button-wrapper
 
 
-# ═══════════════════════════════════════════════════════════════
-# MANEJO DE RESULTADOS
-# ═══════════════════════════════════════════════════════════════
-if result:
-    if "GET_TEXT" in result:
-        texto_capturado = result.get("GET_TEXT").strip()
-        
-        # 1. Publicar a MQTT
-        client1.on_publish = on_publish
-        client1.connect(broker, port)
-        message = json.dumps({"Act1": texto_capturado})
-        client1.publish("voice_ctrl", message)
-        
-        # 2. Mostrar Tarjeta de Éxito
-        st.markdown(f"""
-            <div class="result-card">
-                <div class="result-header">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Enviado a MQTT con éxito
-                </div>
-                <div class="result-text">"{texto_capturado}"</div>
+# 4. Terminal de Resultados
+if result and "GET_TEXT" in result:
+    texto_capturado = result.get("GET_TEXT").strip()
+    
+    # Publicar a MQTT
+    client1.on_publish = on_publish
+    client1.connect(broker, port)
+    message = json.dumps({"Act1": texto_capturado})
+    client1.publish("voice_ctrl", message)
+    
+    # Mostrar en la terminal
+    st.markdown(f"""
+        <div class="terminal-box">
+            <div class="terminal-header">
+                <div class="dot r"></div>
+                <div class="dot y"></div>
+                <div class="dot g"></div>
             </div>
-        """, unsafe_allow_html=True)
+            <div class="terminal-output">
+                <span class="terminal-prompt">user@mqtt:~$</span> {texto_capturado}
+            </div>
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: #888;">
+                > Mensaje publicado en el tópico "voice_ctrl"
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
 
-    # Mantener la lógica original
-    try:
-        os.mkdir("temp")
-    except:
-        pass
+# Mantener lógica de creación de carpeta
+try:
+    os.mkdir("temp")
+except:
+    pass
+
+
+# 5. Footer (Tus datos)
+st.markdown("""
+    <div class="footer-metadata">
+        <b>Juan Pablo</b> · Universidad EAFIT<br>
+        Interfaces Multimodales · 2026
+    </div>
+""", unsafe_allow_html=True)
