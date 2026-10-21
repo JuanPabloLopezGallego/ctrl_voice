@@ -18,20 +18,22 @@ st.set_page_config(
 )
 
 # ═══════════════════════════════════════════════════════════════
-# ESTILOS — SMART AI ASSISTANT (Glassmorphism)
+# ESTILOS — LIGHT MODE / CLEAN UI
 # ═══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
     :root {
-        --bg:         #09090B;
-        --glass:      rgba(24, 24, 27, 0.65);
-        --border:     rgba(255, 255, 255, 0.08);
-        --text:       #FAFAFA;
-        --muted:      #A1A1AA;
-        --accent:     #8B5CF6; /* Violeta */
-        --accent-2:   #D946EF; /* Fucsia */
+        --bg:         #F3F4F6;
+        --surface:    #FFFFFF;
+        --border:     #E5E7EB;
+        --text:       #111827;
+        --muted:      #6B7280;
+        --primary:    #4F46E5; /* Índigo */
+        --primary-lt: #EEF2FF;
+        --success:    #10B981;
+        --success-bg: #ECFDF5;
     }
 
     html, body, [class*="css"], .stApp, button, input, textarea {
@@ -48,9 +50,7 @@ st.markdown("""
     /* ═══ FONDO ═══ */
     .stApp {
         background-color: var(--bg) !important;
-        background-image: 
-            radial-gradient(circle at 50% -10%, rgba(139, 92, 246, 0.2) 0%, transparent 60%),
-            radial-gradient(circle at 50% 110%, rgba(217, 70, 239, 0.1) 0%, transparent 60%);
+        background-image: radial-gradient(circle at 50% 0%, #ffffff 0%, transparent 70%);
         background-attachment: fixed;
     }
 
@@ -70,33 +70,30 @@ st.markdown("""
         margin-bottom: 2.5rem;
     }
     .hero h1 {
-        font-size: 3.2rem !important;
+        font-size: 3rem !important;
+        color: var(--text) !important;
         margin: 0 0 0.5rem 0 !important;
-        background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
     }
     .hero p {
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         color: var(--muted);
         margin: 0;
+        font-weight: 500;
     }
 
-    /* ═══ TARJETA PRINCIPAL ═══ */
+    /* ═══ TARJETA PRINCIPAL (BLANCA) ═══ */
     .main-card {
-        background: var(--glass);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 24px;
         padding: 2.5rem 2rem;
         text-align: center;
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+        box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02);
         margin-bottom: 2rem;
         position: relative;
     }
 
-    /* Instrucciones integradas de forma elegante */
+    /* Instrucciones */
     .instructions {
         font-size: 0.95rem;
         color: var(--muted);
@@ -108,8 +105,7 @@ st.markdown("""
         color: var(--text);
     }
 
-    /* ═══ FIX DEL IFRAME DE BOKEH (EL VERDADERO PROBLEMA) ═══ */
-    /* Forzamos al componente de Bokeh a ser transparente y sin bordes */
+    /* ═══ FIX IFRAME BOKEH (Ahora se funde con la tarjeta blanca) ═══ */
     iframe[title="streamlit_bokeh_events.streamlit_bokeh_events"] {
         background-color: transparent !important;
         border: none !important;
@@ -124,9 +120,9 @@ st.markdown("""
 
     /* ═══ TARJETA DE RESULTADOS ═══ */
     .result-card {
-        background: rgba(16, 185, 129, 0.08);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        border-left: 4px solid #10B981;
+        background: var(--success-bg);
+        border: 1px solid #A7F3D0;
+        border-left: 4px solid var(--success);
         border-radius: 12px;
         padding: 1.5rem;
         margin-top: 1rem;
@@ -140,7 +136,7 @@ st.markdown("""
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: #10B981;
+        color: #047857;
         font-weight: 700;
         margin-bottom: 0.5rem;
         display: flex;
@@ -150,7 +146,7 @@ st.markdown("""
     .result-text {
         font-size: 1.25rem;
         font-weight: 500;
-        color: #fff;
+        color: #064E3B;
         font-style: italic;
     }
 
@@ -164,7 +160,7 @@ st.markdown("""
     .footer-meta .author {
         font-family: 'Outfit', sans-serif;
         font-size: 1rem;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text);
         margin-bottom: 0.2rem;
     }
@@ -179,7 +175,7 @@ st.markdown("""
 
 
 # ═══════════════════════════════════════════════════════════════
-# LÓGICA MQTT
+# LÓGICA MQTT (Intacta)
 # ═══════════════════════════════════════════════════════════════
 def on_publish(client, userdata, result):
     pass
@@ -208,7 +204,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 2. Tarjeta Principal con Instrucciones y Botón
+# 2. Tarjeta Principal
 st.markdown('<div class="main-card">', unsafe_allow_html=True)
 
 st.markdown("""
@@ -219,7 +215,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Botón Bokeh configurado para ser sólido (verde/primary) y grande
+# Botón de Bokeh
 stt_button = Button(
     label="🎤 Iniciar Escucha", 
     width=280, 
@@ -247,7 +243,7 @@ stt_button.js_on_event("button_click", CustomJS(code="""
     recognition.start();
     """))
 
-# Renderizar componente (forzando altura baja para que no deje hueco blanco)
+# Componente Bokeh (con altura forzada para ocultar fondo)
 result = streamlit_bokeh_events(
     stt_button,
     events="GET_TEXT",
