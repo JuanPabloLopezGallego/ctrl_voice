@@ -19,20 +19,19 @@ st.set_page_config(
 )
 
 # ═══════════════════════════════════════════════════════════════
-# ESTILOS — VOICE ASSISTANT
+# ESTILOS — SMART HOME / GLASSMORPHISM
 # ═══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
     :root {
-        --bg:         #0B0914;
-        --surface:    #151124;
-        --border:     #312B4B;
-        --text:       #F8FAFC;
-        --muted:      #94A3B8;
-        --pulse:      #8B5CF6; /* Violeta */
-        --pulse-glow: rgba(139, 92, 246, 0.4);
+        --bg:         #09090B;
+        --glass:      rgba(24, 24, 27, 0.6);
+        --border:     rgba(255, 255, 255, 0.1);
+        --text:       #FAFAFA;
+        --muted:      #A1A1AA;
+        --accent:     #8B5CF6; /* Violeta */
         --success:    #10B981;
     }
 
@@ -51,8 +50,8 @@ st.markdown("""
     .stApp {
         background-color: var(--bg) !important;
         background-image: 
-            radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, transparent 60%),
-            radial-gradient(circle at 50% 100%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+            radial-gradient(circle at 50% -10%, rgba(139, 92, 246, 0.2) 0%, transparent 60%),
+            radial-gradient(circle at 50% 110%, rgba(16, 185, 129, 0.1) 0%, transparent 60%);
         background-attachment: fixed;
     }
 
@@ -61,152 +60,141 @@ st.markdown("""
     header[data-testid="stHeader"] { background: transparent; }
 
     .block-container {
-        padding-top: 4rem !important;
-        padding-bottom: 4rem !important;
-        max-width: 800px !important;
+        padding-top: 3rem !important;
+        padding-bottom: 3rem !important;
+        max-width: 700px !important;
     }
 
-    /* ═══ HERO ═══ */
+    /* ═══ TÍTULOS ═══ */
     .hero {
         text-align: center;
-        margin-bottom: 3rem;
+        margin-bottom: 2.5rem;
     }
     .hero-kicker {
         font-size: 0.8rem;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--pulse);
+        color: var(--accent);
         font-weight: 600;
-        margin-bottom: 0.8rem;
-        display: inline-block;
+        margin-bottom: 0.5rem;
+        display: block;
     }
     .hero h1 {
-        font-size: 3.2rem !important;
+        font-size: 3rem !important;
         margin: 0 0 0.5rem 0 !important;
-        background: linear-gradient(135deg, #ffffff 30%, #a78bfa 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
     }
     .hero p {
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         color: var(--muted);
         margin: 0;
     }
 
-    /* ═══ CONTENEDOR DEL MICRÓFONO ═══ */
-    .voice-container {
-        background: var(--surface);
+    /* ═══ TARJETA PRINCIPAL (Glassmorphism) ═══ */
+    .control-card {
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--border);
         border-radius: 24px;
-        padding: 3rem 2rem;
+        padding: 3rem 2rem 2rem 2rem;
         text-align: center;
-        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);
         position: relative;
         overflow: hidden;
-        margin-bottom: 2rem;
     }
     
-    /* Efecto de aura de fondo */
-    .voice-container::before {
+    /* Aura de fondo dentro de la tarjeta */
+    .control-card::before {
         content: '';
         position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
+        top: -50px; left: 50%;
+        transform: translateX(-50%);
         width: 200px; height: 200px;
-        background: var(--pulse);
+        background: var(--accent);
         filter: blur(80px);
-        opacity: 0.15;
+        opacity: 0.3;
         z-index: 0;
         border-radius: 50%;
     }
-
-    .voice-container > * {
+    .control-card > * {
         position: relative;
         z-index: 1;
     }
 
-    /* Imagen del micrófono */
-    [data-testid="stImage"] img {
-        border-radius: 50% !important;
-        border: 3px solid var(--border);
-        box-shadow: 0 0 30px var(--pulse-glow);
-        object-fit: cover;
-        transition: all 0.3s ease;
+    /* ═══ IMAGEN CIRCULAR PERFECTA ═══ */
+    /* Forzamos la imagen a ser un círculo perfecto, sin importar si es rectangular */
+    [data-testid="stImage"] {
+        display: flex;
+        justify-content: center;
         margin-bottom: 1.5rem;
+    }
+    [data-testid="stImage"] img {
+        width: 160px !important;
+        height: 160px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+        clip-path: circle(50% at 50% 50%);
+        border: 4px solid var(--accent);
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+        transition: all 0.3s ease;
     }
     [data-testid="stImage"] img:hover {
-        border-color: var(--pulse);
-        box-shadow: 0 0 50px var(--pulse-glow);
+        transform: scale(1.05);
+        box-shadow: 0 0 50px rgba(139, 92, 246, 0.7);
     }
 
-    /* Instrucción */
+    /* ═══ INSTRUCCIÓN ═══ */
     .instruction {
-        font-size: 1.05rem;
-        color: var(--text);
+        font-size: 1.1rem;
         font-weight: 500;
-        margin-bottom: 1.5rem;
+        color: var(--text);
+        margin-bottom: 2rem;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
     }
 
-    /* Estilo del botón Bokeh (Aplicado al iframe contenedor) */
+    /* ═══ EL IFRAME DE BOKEH ═══ */
+    /* Hacemos que el iframe sea transparente y se fusione con la tarjeta */
     iframe[title="bokeh"] {
+        background-color: transparent !important;
+        border: none !important;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
-        border: 1px solid var(--border);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    iframe[title="bokeh"]:hover {
-        transform: scale(1.02);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-        border-color: var(--pulse);
+        display: block;
+        margin: 0 auto;
     }
 
-    /* ═══ RESULTADOS DE LA TRANSCRIPCIÓN ═══ */
-    .result-box {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-left: 4px solid var(--success);
-        border-radius: 0 12px 12px 0;
+    /* ═══ RESULTADO ═══ */
+    .result-card {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 16px;
         padding: 1.5rem;
-        margin-top: 1rem;
-        animation: slideIn 0.4s ease-out;
+        margin-top: 1.5rem;
+        text-align: left;
+        animation: fadeIn 0.4s ease-out;
     }
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-10px); }
-        to { opacity: 1; transform: translateX(0); }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-    .result-label {
+    .result-header {
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--success);
         font-weight: 700;
         margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     .result-text {
         font-size: 1.3rem;
         font-weight: 600;
-        color: var(--text);
-        margin-bottom: 1rem;
-    }
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-        padding: 0.4rem 0.8rem;
-        border-radius: 100px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-    
-    .status-badge svg {
-        width: 14px; height: 14px;
+        color: #fff;
+        font-style: italic;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -216,7 +204,6 @@ st.markdown("""
 # LÓGICA MQTT (Intacta)
 # ═══════════════════════════════════════════════════════════════
 def on_publish(client, userdata, result):
-    print("el dato ha sido publicado \n")
     pass
 
 def on_message(client, userdata, message):
@@ -232,10 +219,9 @@ client1.on_message = on_message
 
 
 # ═══════════════════════════════════════════════════════════════
-# INTERFAZ DE USUARIO
+# INTERFAZ GRÁFICA
 # ═══════════════════════════════════════════════════════════════
 
-# Hero Header
 st.markdown("""
     <div class="hero">
         <span class="hero-kicker">Interfaces Multimodales</span>
@@ -244,25 +230,30 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Contenedor Central (Micrófono y Botón)
-st.markdown('<div class="voice-container">', unsafe_allow_html=True)
+# Abrimos la tarjeta de control
+st.markdown('<div class="control-card">', unsafe_allow_html=True)
 
+# Imagen del micrófono (con fallback si no existe)
 try:
     image = Image.open('voice_ctrl.jpg')
-    # Reducimos un poco el tamaño para que no ocupe toda la pantalla
-    st.image(image, width=180)
+    st.image(image)
 except Exception:
-    # Fallback por si no encuentran la imagen
-    st.markdown('<div style="font-size: 5rem; margin-bottom: 1rem;">🎙️</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size: 6rem; margin-bottom: 1rem; text-align: center;">🎙️</div>', unsafe_allow_html=True)
 
 st.markdown("""
     <div class="instruction">
-        <span>👉</span> Toca el botón y comienza a hablar
+        <span>👇</span> Toca el botón y comienza a hablar
     </div>
 """, unsafe_allow_html=True)
 
-# Botón de Bokeh (Lógica intacta)
-stt_button = Button(label="🎤 Iniciar Escucha", width=200)
+# Botón de Bokeh (Usamos button_type="success" para que sea verde sólido nativo)
+stt_button = Button(
+    label="🎤 Iniciar Escucha", 
+    width=200, 
+    height=50, 
+    button_type="success", # Esto hace que el botón sea verde sólido
+    margin=(10, 10, 10, 10)
+)
 
 stt_button.js_on_event("button_click", CustomJS(code="""
     var recognition = new webkitSpeechRecognition();
@@ -283,43 +274,43 @@ stt_button.js_on_event("button_click", CustomJS(code="""
     recognition.start();
     """))
 
+# Componente de eventos de Bokeh
 result = streamlit_bokeh_events(
     stt_button,
     events="GET_TEXT",
     key="listen",
     refresh_on_update=False,
-    override_height=75,
-    debounce_time=0)
+    debounce_time=0
+)
 
-st.markdown('</div>', unsafe_allow_html=True) # Cierre voice-container
+st.markdown('</div>', unsafe_allow_html=True) # Cerramos la tarjeta de control
 
 
 # ═══════════════════════════════════════════════════════════════
-# RESULTADOS Y PUBLICACIÓN MQTT
+# MANEJO DE RESULTADOS
 # ═══════════════════════════════════════════════════════════════
 if result:
     if "GET_TEXT" in result:
         texto_capturado = result.get("GET_TEXT").strip()
         
-        # 1. Conectar y publicar en MQTT
+        # 1. Publicar a MQTT
         client1.on_publish = on_publish
         client1.connect(broker, port)
         message = json.dumps({"Act1": texto_capturado})
-        ret = client1.publish("voice_ctrl", message)
+        client1.publish("voice_ctrl", message)
         
-        # 2. Mostrar el resultado en la interfaz con diseño
+        # 2. Mostrar Tarjeta de Éxito
         st.markdown(f"""
-            <div class="result-box">
-                <div class="result-label">Texto Reconocido</div>
-                <div class="result-text">"{texto_capturado}"</div>
-                <div class="status-badge">
-                    <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                    Enviado por MQTT
+            <div class="result-card">
+                <div class="result-header">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Enviado a MQTT con éxito
                 </div>
+                <div class="result-text">"{texto_capturado}"</div>
             </div>
         """, unsafe_allow_html=True)
 
-    # Mantener la lógica original de creación de carpetas por si acaso se usa luego
+    # Mantener la lógica original
     try:
         os.mkdir("temp")
     except:
